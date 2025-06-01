@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fake News Detector</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; }
+    textarea { width: 100%; height: 100px; font-size: 1rem; padding: 0.5rem; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; margin-top: 1rem; cursor: pointer; }
+    #result { margin-top: 2rem; white-space: pre-wrap; background: #f0f0f0; padding: 1rem; border-radius: 5px; }
+    ul { padding-left: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Fake News Detector</h1>
+  <p>Enter a news claim to check its likely truthfulness:</p>
+  <textarea id="claimInput" placeholder="Type your claim here..."></textarea>
+  <br />
+  <button id="checkBtn">Check Claim</button>
+
+  <div id="result"></div>
+
+  <script>
+    const claimInput = document.getElementById('claimInput');
+    const checkBtn = document.getElementById('checkBtn');
+    const resultDiv = document.getElementById('result');
+    const backend_url = "http://127.0.0.1:8000";
+
+    checkBtn.addEventListener('click', async () => {
+      const claim = claimInput.value.trim();
+      if (!claim) {
+        resultDiv.textContent = "Please enter a claim first.";
+        return;
+      }
+
+      resultDiv.textContent = "Checking claim...";
+
+      try {
+        const response = await fetch(`${backend_url}/detect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ claim })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Error ${response.status}: ${errText}`);
+        }
+
+        const data = await response.json();
+
+        const sourcesList = data.sources.map(src => `<li>${src}</li>`).join("");
+
+        resultDiv.innerHTML = `
+          <strong>Verdict:</strong> ${data.verdict}<br><br>
+          <strong>Explanation:</strong><br>${data.explanation}<br><br>
+          <strong>Search Query:</strong> <em>${data.search_query}</em><br><br>
+          <strong>Sources:</strong>
+          <ul>${sourcesList}</ul>
+        `;
+      } catch (error) {
+        resultDiv.textContent = "⚠️ Error: " + error.message;
+      }
+    });
+  </script>
+</body>
+</html>
