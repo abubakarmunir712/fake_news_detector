@@ -1,0 +1,7 @@
+Flask>=3.0.2
+Flask-Cors>=4.0.0
+python-dotenv>=1.0.1
+google-genai>=1.0.0
+tavily>=0.3.5
+gunicorn>=21.2.0
+
