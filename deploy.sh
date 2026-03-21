@@ -1,65 +1,33 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting production deployment..."
+echo "🚀 Starting TruthLens Deployment..."
 
 # Ensure we're in the project root
 cd "$(dirname "$0")"
 
-# --- Backend Setup ---
-echo "🔧 Setting up backend..."
-
-# Check environment variables
+# --- Environment Check ---
 if [ ! -f backend/.env ]; then
     echo "⚠️  backend/.env not found. Copying from example..."
     cp backend/.env.example backend/.env
-    echo "📝 Please update backend/.env with your API keys!"
+    echo "📝 PLEASE UPDATE backend/.env WITH YOUR API KEYS!"
 fi
 
-# Create/Activate virtual environment
-if [ ! -d backend/venv ]; then
-    echo "📦 Creating virtual environment in backend/venv..."
-    python3 -m venv backend/venv
-fi
+# --- Docker Automation ---
+echo "🐳 Building TruthLens Docker Image (Optimized Multi-Stage)..."
+docker build -t truthlens .
 
-source backend/venv/bin/activate
+echo "🛑 Cleaning up old containers..."
+docker stop truthlens 2>/dev/null || true
+docker rm truthlens 2>/dev/null || true
 
-# Install dependencies
-echo "📦 Installing backend dependencies..."
-pip install -r backend/requirements.txt
+echo "🚢 Launching TruthLens..."
+docker run -d --name truthlens -p 8000:8000 --env-file backend/.env truthlens
 
-# --- Frontend Setup ---
-echo "🎨 Setting up frontend..."
-cd frontend
-
-# Check environment variables
-if [ ! -f .env ]; then
-    echo "⚠️  frontend/.env not found. Creating from example..."
-    cp .env.example .env
-fi
-
-# Install dependencies
-if [ ! -d node_modules ]; then
-    echo "📦 Installing frontend dependencies..."
-    npm install
-fi
-
-# Build
-echo "🏗️  Building frontend..."
-npm run build
-
-cd ..
-
-echo "✅ Deployment complete!"
+echo "✅ Deployment Complete!"
+echo "📍 Access TruthLens at: http://localhost:8000"
+echo "📜 View logs with:      docker logs -f truthlens"
 echo ""
-echo "To start the server:"
-echo "  source backend/venv/bin/activate"
-echo "  gunicorn -c backend/gunicorn.conf.py backend.main:app"
-echo ""
-echo "Or for development:"
-echo "  # Terminal 1 (Backend):"
-echo "  source backend/venv/bin/activate"
-echo "  python -m backend.main"
-echo ""
-echo "  # Terminal 2 (Frontend):"
-echo "  cd frontend && npm run dev"
+echo "Note: If you need to run in development mode (hot-reloading):"
+echo "  Backend: cd backend && source venv/bin/activate && python main.py"
+echo "  Frontend: cd frontend && npm run dev"

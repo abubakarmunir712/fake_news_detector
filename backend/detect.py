@@ -84,30 +84,33 @@ def _analyze_claim(claim: str, sources: List[Dict[str, str]]) -> Tuple[bool, str
         prompt = f"""
         Analyze the following text against the provided news sources.
         
-        Text: "{claim}"
+        Claim to Verify: "{claim}"
         
-        Sources:
+        Search Results/Sources:
         {sources_text}
         
-        Task:
-        1. FIRST, determine if the input is a verifiable claim or news topic.
-           - If it is a greeting, general question (e.g. "how are you"), or unrelated to news/facts, reject it.
-           - Set 'verdict' to "Out of Scope".
-           - Set 'explanation' to "I verify news and claims. Please ask me to check a rumor, headline, or fact."
-           - Set 'confidence_score' to 0.
-           - STOP here.
-        
-        2. If it IS a claim:
-           - Determine if it is 'Likely True', 'Likely Fake'.
-           - If the provided sources do not contain enough information to verify or debunk the claim, set 'verdict' to "Insufficient Info".
-           - Provide a clear, concise explanation citing the sources.
-           - Assign a confidence score (0-100).
-        
-        Return a valid JSON object with the following structure:
+        STRICT GUIDELINES:
+        1. VALIDATION: Determine if the input is a verifiable news-related claim.
+           - If it is a greeting, general conversation, or non-factual statement, set 'verdict' to "Out of Scope".
+           - Provide a polite explanation that you verify news/facts.
+
+        2. SPECIFICITY & CONTEXT:
+           - If the claim is too general or lacks context (e.g., "Pakistan won match" without date, sport, or opponent), set 'verdict' to "Insufficient Info".
+           - In the explanation, state exactly what information is missing (e.g., "Please provide more details like the date, sport, or specific event").
+           - DO NOT guess or assume a specific event based on general knowledge or recent trends if the user didn't specify it.
+
+        3. VERIFICATION:
+           - 'Likely True': The sources EXPLICITLY confirm the specific event/fact mentioned.
+           - 'Likely Fake': The sources EXPLICITLY contradict the specific event/fact mentioned.
+           - 'Insufficient Info': The sources are related but do not confirm or deny the specific details of the claim, or the claim is too vague.
+
+        4. CITATION: Cite specific sources by their number (e.g., [1], [2]) in your explanation.
+
+        Response Format (JSON):
         {{
             "verdict": "Likely True" | "Likely Fake" | "Insufficient Info" | "Out of Scope",
-            "explanation": "Your explanation here...",
-            "confidence_score": 85
+            "explanation": "Clear, concise explanation with citations. If vague, ask for more details.",
+            "confidence_score": 0-100
         }}
         """
 

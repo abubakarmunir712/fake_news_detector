@@ -6,9 +6,9 @@ const Badge = ({ user, className, ...props }) => {
   ].filter(Boolean).join(' ')
 
   return (
-    <div className={classes} {...props}>
-      {user ? user.username : 'Guest'}
-    </div>
+    <span className={classes} {...props}>
+      {user ? (user.username || user.id) : 'Guest'}
+    </span>
   )
 }
 

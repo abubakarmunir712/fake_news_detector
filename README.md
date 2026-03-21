@@ -1,183 +1,85 @@
-# Fake News Detector
+# TruthLens | AI-Powered Fact Verification
 
-AI-powered claim verification system using Tavily search and Gemini for intelligent fact-checking. Users authenticate via SQLite-backed sessions to submit claims for analysis.
+TruthLens is a premium, AI-powered claim verification system. It uses **Tavily Search** and **Gemini 2.0 Flash** to intelligently fact-check news headlines and rumors, providing detailed analysis and referenced sources.
 
-## Stack
-- **Backend**: Flask, SQLite, flask-cors, python-dotenv
-- **Frontend**: React 19 (Vite), shadcn-inspired UI with dark/light mode
-- **AI/Search**: Gemini 2.0 Flash via `google-genai`, Tavily search API
+## ✨ Features
+- 🔐 **Secure Auth**: Hashed passwords and session-based authentication.
+- 🎨 **Premium UI**: Modern glassmorphic design with mesh gradients and custom typography (Outfit).
+- 🌗 **Adaptive Theme**: Refined light and dark modes with a dedicated toggle.
+- 🤖 **Smart AI Analysis**: Strict logic that identifies vague claims and requests more detail instead of guessing.
+- 🔍 **Real-time Research**: Deep integration with Tavily for up-to-the-minute source verification.
+- 🚢 **Docker Ready**: Optimized multi-stage build for a minimal production footprint.
 
-## Project Structure
-```
-fake_news_detector/
-├── backend/           # Flask API
-│   ├── .env.example   # Environment template
-│   ├── main.py        # Entry point
-│   ├── config.py      # Centralized config
-│   ├── auth.py        # Authentication routes
-│   ├── detect.py      # Detection logic
-│   ├── db.py          # Database setup
-│   └── requirements.txt
-├── frontend/          # React SPA
-│   ├── .env.example   # Frontend env template
-│   ├── src/
-│   │   ├── components/ui/  # Reusable UI components
-│   │   ├── App.jsx         # Main app
-│   │   └── config.js       # API URL config
-│   └── package.json
-└── README.md
-```
+## 🚀 Quick Start (Docker)
 
-## Setup
-
-### Backend Setup
-```bash
-cd backend
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys:
-# - FLASK_SECRET_KEY (generate with: python -c "import secrets; print(secrets.token_hex(32))")
-# - GEMINI_API_KEY (from Google AI Studio)
-# - TAVILY_API_KEY (from Tavily)
-```
-
-### Frontend Setup
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Configure environment
-cp .env.example .env
-# Default VITE_API_URL=http://localhost:8000 is fine for local dev
-```
-
-## Development
-
-### Run Backend
-```bash
-# From project root or backend/ directory
-source backend/venv/bin/activate
-python -m backend.main
-# Backend runs at http://localhost:8000
-```
-
-### Run Frontend
-```bash
-cd frontend
-npm run dev
-# Frontend runs at http://localhost:5173
-```
-
-## Production Deployment
-
-### Option 1: Automated Script (Recommended)
-The included `deploy.sh` script handles setup, building, and environment checks.
+The fastest way to get TruthLens running is using the automated deployment script:
 
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
+*Note: Depending on your system, you may need to run docker commands with `sudo`.*
 
-### Option 2: Docker
-Requires `npm run build` to be run first, or update Dockerfile for multi-stage build.
+**Access TruthLens at**: [http://localhost:8000](http://localhost:8000)
 
-1. **Build Frontend:**
-   ```bash
-   cd frontend && npm install && npm run build && cd ..
-   ```
+---
 
-2. **Build & Run Docker:**
-   ```bash
-   docker build -t fake-news-detector .
-   docker run -p 8000:8000 --env-file backend/.env fake-news-detector
-   ```
+## 🛠️ Manual Setup
 
-### Option 3: Manual Production Setup
+### 1. Backend Configuration
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your Google Gemini and Tavily API keys.
+```
 
-1. Set production environment variables in `backend/.env`:
-   ```
-   FLASK_SECRET_KEY=<secure-random-key>
-   GEMINI_API_KEY=<your-key>
-   TAVILY_API_KEY=<your-key>
-   PORT=8000
-   FRONTEND_ORIGIN=https://yourdomain.com
-   ```
+### 2. Frontend Configuration
+```bash
+cd frontend
+npm install
+cp .env.example .env
+# Default VITE_API_URL=http://localhost:8000 is usually correct.
+```
 
-2. Use a production WSGI server (gunicorn):
-   ```bash
-   pip install gunicorn
-   gunicorn -w 4 -b 0.0.0.0:8000 backend.main:app
-   ```
+### 3. Running Locally (Development)
+- **Backend**: `python -m backend.main` (runs on :8000)
+- **Frontend**: `npm run dev` (runs on :5173 with hot-reload)
 
-3. Set up reverse proxy (nginx/caddy) for SSL termination
+---
 
-### Frontend Production Build
-1. Set `VITE_API_URL` in `frontend/.env`:
-   ```
-   VITE_API_URL=https://api.yourdomain.com
-   ```
+## 📋 Deployment Checklist
 
-2. Build and deploy:
-   ```bash
-   cd frontend
-   npm run build
-   # Deploy dist/ folder to static hosting or serve via Flask
-   ```
+- [ ] **Security**: Generate a unique `FLASK_SECRET_KEY` in `backend/.env`.
+- [ ] **API Keys**: Ensure valid `GEMINI_API_KEY` and `TAVILY_API_KEY` are set.
+- [ ] **CORS**: Update `FRONTEND_ORIGIN` in production for proper security.
+- [ ] **Health Check**: Monitor the `/health` endpoint for system status.
+- [ ] **Backups**: Regularly backup the `instance/` directory (SQLite database).
 
-### Recommended Production Stack
-- **Web Server:** Nginx or Caddy (reverse proxy + SSL)
-- **WSGI Server:** Gunicorn (included in requirements)
-- **Database:** SQLite (built-in) or upgrade to PostgreSQL
-- **Process Manager:** systemd or supervisord
-- **Monitoring:** Setup health check monitoring at `/health`
+## 🐳 Docker Commands (Reference)
 
-## API Endpoints
+```bash
+# Build optimized multi-stage image
+docker build -t truthlens .
 
-### Authentication
-- `POST /api/signup` - Create account `{username, password}`
-- `POST /api/login` - Sign in `{username, password}`
-- `POST /api/logout` - Sign out
-- `GET /api/me` - Get current user
+# Run with environment file
+docker run -p 8000:8000 --env-file backend/.env truthlens
 
-### Detection
-- `POST /api/detect` - Analyze claim (auth required)
-  ```json
-  {
-    "claim": "NASA confirms aliens exist"
-  }
-  ```
-  
-  Response:
-  ```json
-  {
-    "verdict": "Likely Fake",
-    "explanation": "Analysis...",
-    "sources": ["Source 1...", "Source 2..."],
-    "search_query": "NASA aliens confirmation"
-  }
-  ```
+# Check logs
+docker logs -f truthlens
+```
 
-## Features
-- 🔐 Secure authentication with hashed passwords
-- 🎨 Modern UI with dark/light theme toggle
-- 🤖 AI-powered fact-checking via Gemini
-- 🔍 Real-time web search via Tavily
-- 📱 Fully responsive design
-- ⚡ Fast React + Vite development
+## 🛠️ Project Structure
+```
+fake_news_detector/
+├── backend/           # Flask API & AI Logic
+├── frontend/          # React App & Design System
+├── Dockerfile         # Multi-stage build config
+├── deploy.sh          # Automation script
+└── README.md          # Project documentation
+```
 
-## Security Notes
-- Never commit `.env` files
-- Use strong secret keys in production
-- Enable HTTPS in production
-- Configure CORS origins properly
-- Regularly update dependencies
+---
+*Created with ❤️ for Truth and Clarity.*
