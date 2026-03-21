@@ -155,179 +155,208 @@ function App() {
     setDetectMessage('')
   }
 
+  const getVerdictKey = (v) => {
+    if (!v) return 'unverifiable'
+    const s = v.toLowerCase()
+    if (s.includes('true')) return 'likely true'
+    if (s.includes('fake')) return 'likely fake'
+    if (s.includes('insufficient')) return 'insufficient info'
+    if (s.includes('scope')) return 'out of scope'
+    return 'unverifiable'
+  }
+
   return (
     <div className="page">
       <header className="header">
         <div className="header-content">
-          <h1 className="title">Fake News Detector</h1>
+          <h1 className="title">TruthLens</h1>
           <p className="subtitle">
-            AI-powered verification using Tavily search & Gemini analysis
+            AI-Powered Fact Verification System
           </p>
         </div>
         <div className="stack">
-          <Badge user={user} />
+          {user && <Badge user={user} />}
           <ThemeToggle theme={theme} onToggle={toggle} />
         </div>
       </header>
 
-      <div className="grid">
-        <Card>
-          <div className="card-head">
-            <div>
-              <h2>🔐 Account</h2>
+      {!user ? (
+        /* Login/Signup Screen - Full Width/Centered */
+        <div className="login-container">
+          <Card className="login-card">
+            <div className="card-head center-text">
+              <h2>Welcome to TruthLens</h2>
               <p className="muted">
-                Sign in or create an account to verify claims
+                Please sign in to verify claims with AI precision
               </p>
             </div>
-          </div>
-          
-          <div className="pill-toggle" style={{ marginBottom: '1.5rem' }}>
-            <button
-              className={mode === 'login' ? 'active' : ''}
-              onClick={() => setMode('login')}
-            >
-              Login
-            </button>
-            <button
-              className={mode === 'signup' ? 'active' : ''}
-              onClick={() => setMode('signup')}
-            >
-              Sign up
-            </button>
-          </div>
 
-          <div className="stack column">
-            <Input
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </div>
+            <div className="pill-toggle center-toggle">
+              <button
+                className={mode === 'login' ? 'active' : ''}
+                onClick={() => setMode('login')}
+              >
+                Login
+              </button>
+              <button
+                className={mode === 'signup' ? 'active' : ''}
+                onClick={() => setMode('signup')}
+              >
+                Sign up
+              </button>
+            </div>
 
-          <div className="stack" style={{ marginTop: '1rem' }}>
-            <Button
-              variant="primary"
-              onClick={handleAuth}
-              disabled={authLoading}
-            >
-              {authLoading && <span className="loading-spinner"></span>}
-              {authLoading
-                ? 'Processing...'
-                : mode === 'login'
-                  ? 'Login'
-                  : 'Create account'}
-            </Button>
-            {user && (
+            <div className="stack column">
+              <div className="full-width">
+                <label className="label">Username</label>
+                <Input
+                  placeholder="johndoe"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  required
+                />
+              </div>
+              <div className="full-width">
+                <label className="label">Password</label>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
               <Button
-                variant="secondary"
-                onClick={logout}
+                variant="primary"
+                className="full-width"
+                onClick={handleAuth}
                 disabled={authLoading}
+              >
+                {authLoading && <span className="loading-spinner"></span>}
+                {authLoading
+                  ? 'Processing...'
+                  : mode === 'login'
+                    ? 'Sign In'
+                    : 'Create Account'}
+              </Button>
+            </div>
+
+            {authMessage && (
+              <div className={`status ${authError ? 'error' : ''}`}>
+                {authMessage}
+              </div>
+            )}
+          </Card>
+        </div>
+      ) : (
+        /* Main Application - Grid Layout */
+        <div className="grid grid-2">
+          <Card>
+            <div className="card-head">
+              <div>
+                <h2>🔍 Verify Claim</h2>
+                <p className="muted">
+                  Enter a news headline or claim to analyze
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={logout}
+                className="small-btn"
               >
                 Logout
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              onClick={refreshSession}
-              disabled={authLoading}
-            >
-              Refresh
-            </Button>
-          </div>
-
-          {authMessage && (
-            <div className={`status ${authError ? 'error' : ''}`}>
-              {authMessage}
             </div>
-          )}
-          {user && (
-            <div className="status">
-              ✓ Signed in as <strong>{user.username}</strong>
+
+            <div className="mb-4">
+              <label className="label">News Content / Claim</label>
+              <textarea
+                className="input"
+                placeholder="Paste the news headline or article text here to verify..."
+                value={claim}
+                onChange={(e) => setClaim(e.target.value)}
+                rows={5}
+              ></textarea>
             </div>
-          )}
-        </Card>
 
-        <Card>
-          <div className="card-head">
-            <div>
-              <h2>🔍 Detect</h2>
-              <p className="muted">
-                Enter any claim to check its veracity
-              </p>
+            <div className="stack mt-4 flex-end">
+              <Button
+                variant="secondary"
+                onClick={clearResult}
+                disabled={detectLoading && !result}
+              >
+                Clear
+              </Button>
+              <Button
+                variant="primary"
+                onClick={runDetect}
+                disabled={detectLoading}
+              >
+                {detectLoading && <span className="loading-spinner"></span>}
+                {detectLoading ? 'Analyzing...' : 'Verify Claim'}
+              </Button>
             </div>
-          </div>
 
-          <textarea
-            className="input"
-            placeholder="Example: NASA has confirmed the existence of alien life..."
-            value={claim}
-            onChange={(e) => setClaim(e.target.value)}
-          ></textarea>
-
-          <div className="stack" style={{ marginTop: '1rem' }}>
-            <Button
-              variant="primary"
-              onClick={runDetect}
-              disabled={detectLoading || !user}
-            >
-              {detectLoading && <span className="loading-spinner"></span>}
-              {detectLoading ? 'Analyzing...' : 'Run detection'}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={clearResult}
-              disabled={detectLoading && !result}
-            >
-              Clear
-            </Button>
-          </div>
-          
-          {!user && (
-            <div className="status error">⚠️ Please login to detect claims</div>
-          )}
-          {detectMessage && <div className="status">{detectMessage}</div>}
+            {detectMessage && <div className="status">{detectMessage}</div>}
+          </Card>
 
           {result && (
-            <div className="result">
+            <Card
+              className="result-card"
+              data-verdict={getVerdictKey(result.verdict)}
+            >
               <div className="result-header">
-                <div className={`tag ${
-                  result.verdict?.toLowerCase().includes('true') ? 'true' :
-                  result.verdict?.toLowerCase().includes('fake') ? 'fake' : 
-                  'unverifiable'
-                }`}>
-                  {result.verdict}
+                <div className="verdict-container">
+                  <div className={`verdict-badge ${result.verdict?.toLowerCase().includes('true') ? 'true' :
+                    result.verdict?.toLowerCase().includes('fake') ? 'fake' :
+                      result.verdict?.toLowerCase().includes('scope') ? 'scope' :
+                        result.verdict?.toLowerCase().includes('insufficient') ? 'insufficient' :
+                          'unverifiable'
+                    }`}>
+                    {result.verdict}
+                  </div>
                 </div>
-                {result.search_query && (
-                  <div className="fade">🔎 Query: {result.search_query}</div>
+                {result.confidence_score !== undefined && result.confidence_score > 0 && (
+                  <div className="score-badge">
+                    <span className="score-label">Confidence</span>
+                    <span className="score">{result.confidence_score}%</span>
+                  </div>
                 )}
               </div>
+
               <div className="explanation">
-                {result.explanation || result.raw}
+                <h3>Analysis</h3>
+                <p>{result.explanation || result.raw}</p>
               </div>
+
               {result.sources?.length > 0 && (
-                <div>
-                  <div className="muted" style={{ marginTop: '1.5rem', fontWeight: 600 }}>
-                    📚 Sources ({result.sources.length})
-                  </div>
-                  <ul className="sources">
+                <div className="sources-section">
+                  <h3>📚 Referenced Sources</h3>
+                  <div className="sources-grid">
                     {result.sources.map((source, idx) => (
-                      <li key={idx}>{source}</li>
+                      <a
+                        key={idx}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="source-link"
+                      >
+                        <div className="source-title">{source.title}</div>
+                        <div className="source-domain">{new URL(source.url).hostname.replace('www.', '')}</div>
+                      </a>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
-            </div>
+            </Card>
           )}
-        </Card>
-      </div>
+        </div>
+      )}
     </div>
   )
 }

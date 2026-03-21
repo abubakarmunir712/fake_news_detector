@@ -32,18 +32,18 @@ fake_news_detector/
 
 ### Backend Setup
 ```bash
-cd /home/apophyx/Projects/Personal/fake_news_detector
+cd backend
 
 # Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 
 # Configure environment
-cp backend/.env.example backend/.env
-# Edit backend/.env with your API keys:
+cp .env.example .env
+# Edit .env with your API keys:
 # - FLASK_SECRET_KEY (generate with: python -c "import secrets; print(secrets.token_hex(32))")
 # - GEMINI_API_KEY (from Google AI Studio)
 # - TAVILY_API_KEY (from Tavily)
@@ -56,16 +56,17 @@ cd frontend
 # Install dependencies
 npm install
 
-# Configure environment (optional for dev, uses proxy)
+# Configure environment
 cp .env.example .env
-# For production, set VITE_API_URL to your backend URL
+# Default VITE_API_URL=http://localhost:8000 is fine for local dev
 ```
 
 ## Development
 
-### Run Backend (from repo root)
+### Run Backend
 ```bash
-source .venv/bin/activate
+# From project root or backend/ directory
+source backend/venv/bin/activate
 python -m backend.main
 # Backend runs at http://localhost:8000
 ```
@@ -73,52 +74,33 @@ python -m backend.main
 ### Run Frontend
 ```bash
 cd frontend
-
-# Development mode (hot reload, proxies to backend)
 npm run dev
 # Frontend runs at http://localhost:5173
-
-# Build for production
-npm run build
-# Outputs to frontend/dist/
 ```
 
 ## Production Deployment
 
-### Option 1: Traditional Deployment
+### Option 1: Automated Script (Recommended)
+The included `deploy.sh` script handles setup, building, and environment checks.
 
-1. **Prepare environment:**
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+### Option 2: Docker
+Requires `npm run build` to be run first, or update Dockerfile for multi-stage build.
+
+1. **Build Frontend:**
    ```bash
-   cp backend/.env.example backend/.env
-   # Edit backend/.env with production values
+   cd frontend && npm install && npm run build && cd ..
    ```
 
-2. **Run deployment script:**
+2. **Build & Run Docker:**
    ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
+   docker build -t fake-news-detector .
+   docker run -p 8000:8000 --env-file backend/.env fake-news-detector
    ```
-
-3. **Start production server:**
-   ```bash
-   source .venv/bin/activate
-   gunicorn -c backend/gunicorn.conf.py backend.main:app
-   ```
-
-### Option 2: Docker Deployment
-
-1. **Build and run with Docker Compose:**
-   ```bash
-   # Create .env file in project root with required variables
-   cp backend/.env.example .env
-   # Edit .env with your keys
-   
-   docker-compose up -d
-   ```
-
-2. **Access the application:**
-   - Application: http://localhost:8000
-   - Health check: http://localhost:8000/health
 
 ### Option 3: Manual Production Setup
 

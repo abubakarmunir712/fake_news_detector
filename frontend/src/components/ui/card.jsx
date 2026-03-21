@@ -1,5 +1,5 @@
-const Card = ({ children }) => {
-  return <div className="card">{children}</div>
+const Card = ({ className, ...props }) => {
+  return <div className={['card', className].filter(Boolean).join(' ')} {...props}>{props.children}</div>
 }
 
 export default Card

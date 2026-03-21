@@ -1,10 +1,14 @@
-const ThemeToggle = ({ theme, onToggle }) => {
-  const label = theme === 'dark' ? 'Dark' : 'Light'
+const ThemeToggle = ({ theme, onToggle, className, ...props }) => {
   const icon = theme === 'dark' ? '🌙' : '☀️'
   return (
-    <button className="theme-toggle" onClick={onToggle} aria-label="Toggle color theme">
-      <span style={{ marginRight: '0.35rem' }}>{icon}</span>
-      {label} mode
+    <button 
+      className={['theme-toggle', className].filter(Boolean).join(' ')} 
+      onClick={onToggle} 
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      aria-label="Toggle color theme"
+      {...props}
+    >
+      {icon}
     </button>
   )
 }
